@@ -10,9 +10,11 @@ import (
 	"time"
 )
 
-var port string
+var kv *Store
 
 func main() {
+	kv = NewStore()
+	var port string
 	flag.StringVar(&port, "port", "3000", "The port the server listens on")
 	flag.Parse()
 	fmt.Printf("Initialising TCP server on port %v\n", port)
@@ -52,11 +54,13 @@ func handleConnection(conn net.Conn) {
 		}
 		// Output the data and echo back
 		data := buffer[:n]
-		fmt.Printf("Received data from TCP socket: %s\n", strings.TrimRight(string(data), "\r\n"))
-		_, err = conn.Write(data)
+		s := strings.TrimRight(string(data), "\r\n")
+		fmt.Printf("Received data from TCP socket: %s\n", s)
+		// Handle the command
+		r, err := handle(s, kv)
 		if err != nil {
-			fmt.Printf("Error writing to the TCP connection %v %v\n", conn.RemoteAddr(), err)
-			return
+			fmt.Printf("Handle error from connection %v %v\n", conn.RemoteAddr(), err)
 		}
+		conn.Write([]byte(r + "\n"))
 	}
 }
