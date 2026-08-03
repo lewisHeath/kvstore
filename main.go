@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
+	"log"
 	"os/signal"
 	"syscall"
 
@@ -13,7 +13,9 @@ import (
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	fmt.Println("Application started. Press Ctrl+C to exit.")
+
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	log.Println("Application started....")
 
 	s := server.NewServer()
 	tcp_port := flag.String("tcp-port", "3000", "The tcp port the server listens on")
@@ -23,5 +25,5 @@ func main() {
 	go s.ServeHTTP(*http_port)
 
 	<-ctx.Done()
-	fmt.Println("Shutting down...")
+	log.Println("Shutting down...")
 }

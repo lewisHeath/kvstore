@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"strings"
 	"time"
@@ -22,7 +23,7 @@ func NewServer() *Server {
 }
 
 func (s *Server) Listen(port string) {
-	fmt.Printf("Initialising TCP server on port %v\n", port)
+	log.Printf("Initialising TCP server on port %v\n", port)
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
 	if err != nil {
 		fmt.Printf("Error starting the TCP server: %v\n", err)
@@ -32,7 +33,7 @@ func (s *Server) Listen(port string) {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			fmt.Printf("Error accepting a connection on listener %v port %v: %v\n", ln.Addr().Network(), ln.Addr().String(), err)
+			log.Printf("Error accepting a connection on listener %v port %v: %v\n", ln.Addr().Network(), ln.Addr().String(), err)
 			return
 		}
 		go s.handleConnection(conn)
@@ -41,7 +42,7 @@ func (s *Server) Listen(port string) {
 
 func (s *Server) handleConnection(conn net.Conn) {
 	defer conn.Close()
-	fmt.Printf("Accepted TCP connection from %v\n", conn.RemoteAddr())
+	log.Printf("Accepted TCP connection from %v\n", conn.RemoteAddr())
 	scanner := bufio.NewScanner(conn)
 	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 	for scanner.Scan() {
@@ -49,7 +50,7 @@ func (s *Server) handleConnection(conn net.Conn) {
 		if line == "" {
 			continue
 		}
-		fmt.Printf("Received data from TCP socket: %s\n", line)
+		log.Printf("Received data from TCP socket: %s\n", line)
 		r := s.handle(line)   // Handle the command
 		fmt.Fprintln(conn, r) // Output to the connection
 		conn.SetReadDeadline(time.Now().Add(30 * time.Second))
@@ -57,13 +58,13 @@ func (s *Server) handleConnection(conn net.Conn) {
 	if err := scanner.Err(); err != nil {
 		var netErr net.Error
 		if errors.As(err, &netErr) && netErr.Timeout() {
-			fmt.Printf("Client %v timed out\n", conn.RemoteAddr())
+			log.Printf("Client %v timed out\n", conn.RemoteAddr())
 		} else {
-			fmt.Printf("Error reading from the TCP connection %v %v\n", conn.RemoteAddr(), err)
+			log.Printf("Error reading from the TCP connection %v %v\n", conn.RemoteAddr(), err)
 		}
 		return
 	}
-	fmt.Printf("client %v disconnected\n", conn.RemoteAddr())
+	log.Printf("client %v disconnected\n", conn.RemoteAddr())
 }
 
 func (s *Server) handle(c string) string {
@@ -76,7 +77,7 @@ func (s *Server) handle(c string) string {
 		if len(command) != 2 {
 			return "GET requires 1 key"
 		}
-		fmt.Printf("Performing GET on key=%v\n", command[1])
+		log.Printf("Performing GET on key=%v\n", command[1])
 		v, ok := s.store.Get(command[1])
 		if !ok {
 			return "NOTFOUND"
@@ -86,14 +87,14 @@ func (s *Server) handle(c string) string {
 		if len(command) != 3 {
 			return "PUT requires a 2 inputs, a key and a value"
 		}
-		fmt.Printf("Performing PUT with key=%v value=%v\n", command[1], command[2])
+		log.Printf("Performing PUT with key=%v value=%v\n", command[1], command[2])
 		s.store.Put(command[1], command[2])
 		return "OK"
 	case "DELETE":
 		if len(command) != 2 {
 			return "DELETE requires 1 key"
 		}
-		fmt.Printf("Performing DELETE on key=%v\n", command[1])
+		log.Printf("Performing DELETE on key=%v\n", command[1])
 		ok := s.store.Delete(command[1])
 		if !ok {
 			return "NOTFOUND"
