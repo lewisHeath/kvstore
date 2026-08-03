@@ -12,21 +12,25 @@ import (
 	"github.com/lewisHeath/kvstore/store"
 )
 
+// Server is a key-value store server that supports TCP and HTTP transport.
 type Server struct {
 	store *store.Store
 }
 
+// NewServer returns a new Server with an initialized store.
 func NewServer() *Server {
 	return &Server{
 		store: store.NewStore(),
 	}
 }
 
+// Listen starts a TCP server on the given port, accepting connections
+// and handling them concurrently.
 func (s *Server) Listen(port string) {
 	log.Printf("Initialising TCP server on port %v\n", port)
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
 	if err != nil {
-		fmt.Printf("Error starting the TCP server: %v\n", err)
+		log.Printf("Error starting the TCP server: %v\n", err)
 		return
 	}
 	defer ln.Close()
@@ -67,6 +71,7 @@ func (s *Server) handleConnection(conn net.Conn) {
 	log.Printf("client %v disconnected\n", conn.RemoteAddr())
 }
 
+// handle parses a text protocol command and dispatches to the store.
 func (s *Server) handle(c string) string {
 	command := strings.SplitN(c, " ", 3)
 	if len(command) == 0 {

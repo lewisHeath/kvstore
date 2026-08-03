@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// ServeHTTP registers HTTP routes and starts the HTTP server on the given port.
 func (s *Server) ServeHTTP(port string) {
 	log.Printf("Initialising HTTP server on port %v\n", port)
 
