@@ -1,11 +1,15 @@
-FROM golang
+FROM golang AS build
 
 WORKDIR /app
 
 COPY go.mod ./
 COPY . .
 
-RUN go build -o /kvstore .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /kvstore .
+
+FROM scratch
+
+COPY --from=build /kvstore /kvstore
 
 EXPOSE 8080
 EXPOSE 3000
