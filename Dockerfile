@@ -11,7 +11,4 @@ FROM scratch
 
 COPY --from=build /kvstore /kvstore
 
-EXPOSE 8080
-EXPOSE 3000
-
 CMD ["/kvstore"]
